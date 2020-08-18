@@ -29,7 +29,7 @@ Create an ingress controller with the following options:
         strimzi.io/kind: Kafka
 #+end_src
 
-A example configuration is here [[./ingress/kafka-ingress.yml]]
+A example configuration is [[file:ingress/kafka-ingress.yml][here]]
 
 This ingress controller will select routes with a label
 ~strimzi.io/kind: Kafka~ . If you want to publish routes only from a
