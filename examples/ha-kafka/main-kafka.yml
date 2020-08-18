@@ -1,0 +1,26 @@
+apiVersion: kafka.strimzi.io/v1beta1
+kind: Kafka
+metadata:
+  name: main-kafka
+  namespace: main-kafka
+spec:
+  kafka:
+    template:
+      route:
+        metadata:
+          labels:
+            type: kafka
+    replicas: 3
+    listeners:
+      plain: {}
+      tls: {}
+      external:
+        type: route
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 3
+    storage:
+      type: ephemeral
+  entityOperator:
+    topicOperator: {}
