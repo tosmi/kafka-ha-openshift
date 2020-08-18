@@ -5,11 +5,11 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#orga7f3ec4)
-2.  [Introduction](#org08bf9e4)
-3.  [Route sharding](#orgb180fc5)
-    1.  [OpenShift 4.n](#org461a565)
-    2.  [OpenShift 3.11 (untested)](#org3eebb5b)
+1.  [Kafka disaster recovery with MirrorMaker 2](#org79b5c8a)
+2.  [Introduction](#org19364cd)
+3.  [Route sharding](#org3a5272f)
+    1.  [OpenShift 4.n](#org0ae2a2d)
+    2.  [OpenShift 3.11 (untested)](#org11834fe)
 
 
 # Introduction
@@ -35,6 +35,8 @@ Create an ingress controller with the following options:
     routeSelector:
       matchLabels:
         strimzi.io/kind: Kafka
+
+A example configuration is here <./ingress/kafka-ingress.yml>
 
 This ingress controller will select routes with a label
 `strimzi.io/kind: Kafka` . If you want to publish routes only from a
