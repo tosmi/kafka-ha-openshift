@@ -14,6 +14,35 @@ The example configuration is
 - a dr-kafka cluster deployed with strimzi (https://strimzi.io)
 - a MirrorMaker2 configuration to sync topics from main-kafka to dr-kafka
 
+* Getting started
+
+For installating the strimzi operator follow the [[https://strimzi.io/docs/operators/master/quickstart.html#proc-install-product-str][quick-start
+installation]] documention.  We used the strimzi operator bundled with
+Red Hat's AMQ streams. But the examples below should also work with
+the upstream operator. AMQ Streams 1.5 comes with Kafka 2.5 and
+Strimzi 0.18.0.
+
+* Examples
+
+** Single instance Kafka
+
+In the [[examples/single-kafka][examples/single-kafka]] folder is a very simple single kafka
+configuration for getting started with the strimzi operator. It creates the following objects
+
+- A main-kafka [[examples/single-kafka/main-kafka-namespace.yml][namespace]] for running the main kafka instance
+- A strimzi kafka [[examples/single-kafka/main-kafka.yml][resource]] for running Kafka
+- A strimzi topic [[examples/single-kafka/topic.yml][resource]] for creating a test topic
+- A test [[examples/single-kafka/test-producer.yml][producer]] that uses the main-kafka Kafka instance
+- A test [[examples/single-kafka/test-consumer.yml][consumer]] that uses the main-kafka Kafka instance
+
+** DR Kafka configuration
+
+For testing the desaster recovery safe Kafka configuration we create a
+second namespace dr-kafka and mirror all topics from main-kafka with
+MirrorMaker 2 to this instance.
+
+We are using the same resouces as in [[Single instance Kafka]]. Additionally we create
+
 * Route sharding
 
 We would like to expose routes created by strimzi to a separate ingress controller (aka router).
