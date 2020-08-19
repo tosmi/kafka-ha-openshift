@@ -5,11 +5,15 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#orgabff3fc)
-2.  [Introduction](#org97c4ab0)
-3.  [Route sharding](#org9942f23)
-    1.  [OpenShift 4.n](#org0a14619)
-    2.  [OpenShift 3.11 (untested)](#org3e85511)
+1.  [Kafka disaster recovery with MirrorMaker 2](#org9bb2853)
+2.  [Introduction](#org33fea6e)
+3.  [Getting started](#org46a4570)
+4.  [Examples](#org7b61b02)
+    1.  [Single instance Kafka](#org3f13d0a)
+    2.  [DR Kafka configuration](#org7f479c4)
+5.  [Route sharding](#orgd2d6ef5)
+    1.  [OpenShift 4.n](#org996a575)
+    2.  [OpenShift 3.11 (untested)](#orgd7f320c)
 
 
 # Introduction
@@ -20,6 +24,41 @@ The example configuration is
 -   a main-kafka cluster deployed with strimzi (<https://strimzi.io>)
 -   a dr-kafka cluster deployed with strimzi (<https://strimzi.io>)
 -   a MirrorMaker2 configuration to sync topics from main-kafka to dr-kafka
+
+
+# Getting started
+
+For installating the strimzi operator follow the [quick-start
+installation](https://strimzi.io/docs/operators/master/quickstart.html#proc-install-product-str) documention.  We used the strimzi operator bundled with
+Red Hat's AMQ streams. But the examples below should also work with
+the upstream operator. AMQ Streams 1.5 comes with Kafka 2.5 and
+Strimzi 0.18.0.
+
+
+# Examples
+
+
+<a id="org3f13d0a"></a>
+
+## Single instance Kafka
+
+In the [examples/single-kafka](examples/single-kafka) folder is a very simple single kafka
+configuration for getting started with the strimzi operator. It creates the following objects
+
+-   A main-kafka [namespace](examples/single-kafka/10-main-kafka-namespace.yml) for running the main kafka instance
+-   A strimzi kafka [resource](examples/single-kafka/20-main-kafka.yml) for running Kafka
+-   A strimzi topic [resource](examples/single-kafka/30-topic.yml) for creating a test topic
+-   A test [producer](examples/single-kafka/40-test-producer.yml) that uses the main-kafka Kafka instance
+-   A test [consumer](examples/single-kafka/50-test-consumer.yml) that uses the main-kafka Kafka instance
+
+
+## DR Kafka configuration
+
+For testing the desaster recovery safe Kafka configuration we create a
+second namespace dr-kafka and mirror all topics from main-kafka with
+MirrorMaker 2 to this instance.
+
+We are using the same resouces as in [4.1](#org3f13d0a). Additionally we create
 
 
 # Route sharding

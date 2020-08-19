@@ -26,14 +26,14 @@ Strimzi 0.18.0.
 
 ** Single instance Kafka
 
-In the [[examples/single-kafka][examples/single-kafka]] folder is a very simple single kafka
+In the [[file:examples/single-kafka][examples/single-kafka]] folder is a very simple single kafka
 configuration for getting started with the strimzi operator. It creates the following objects
 
-- A main-kafka [[examples/single-kafka/main-kafka-namespace.yml][namespace]] for running the main kafka instance
-- A strimzi kafka [[examples/single-kafka/main-kafka.yml][resource]] for running Kafka
-- A strimzi topic [[examples/single-kafka/topic.yml][resource]] for creating a test topic
-- A test [[examples/single-kafka/test-producer.yml][producer]] that uses the main-kafka Kafka instance
-- A test [[examples/single-kafka/test-consumer.yml][consumer]] that uses the main-kafka Kafka instance
+- A main-kafka [[file:examples/single-kafka/10-main-kafka-namespace.yml][namespace]] for running the main kafka instance
+- A strimzi kafka [[file:examples/single-kafka/20-main-kafka.yml][resource]] for running Kafka
+- A strimzi topic [[file:examples/single-kafka/30-topic.yml][resource]] for creating a test topic
+- A test [[file:examples/single-kafka/40-test-producer.yml][producer]] that uses the main-kafka Kafka instance
+- A test [[file:examples/single-kafka/50-test-consumer.yml][consumer]] that uses the main-kafka Kafka instance
 
 ** DR Kafka configuration
 
