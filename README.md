@@ -5,11 +5,11 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#org3bdd4f7)
-2.  [Introduction](#org3d6ccad)
-3.  [Route sharding](#org8290715)
-    1.  [OpenShift 4.n](#orgaa9c8cc)
-    2.  [OpenShift 3.11 (untested)](#org0fa7adc)
+1.  [Kafka disaster recovery with MirrorMaker 2](#orgabff3fc)
+2.  [Introduction](#org97c4ab0)
+3.  [Route sharding](#org9942f23)
+    1.  [OpenShift 4.n](#org0a14619)
+    2.  [OpenShift 3.11 (untested)](#org3e85511)
 
 
 # Introduction
@@ -82,6 +82,8 @@ We would propose the following steps:
 1.  Create a new router template with `oc adm router --dry-run -o yaml --service-account=router > kafka-router.yml`
 2.  Modify the generated yaml file
     -   change the router name
-    -   add the following environment variable `ROUTE_LABELS='strimzi.io/kind=Kafka'`
+    -   add the following environment variable `ROUTE_LABELS='strimzi.io/kind=Kafka'` OR
+    -   use `ROUTER_ALLOWED_DOMAINS`, so that the kafka router only picks up routes for a certain domain
+        e.g. `oc set env dc/router ROUTER_ALLOWED_DOMAINS=kafka.ocp3.local`, if more than one domain is used they should be separated by a comma.
 3.  Create the router with ~oc create -f kafka-router.yml and test if it picks up the kafka routes
 4.  Modify the default router so it does not expose routes for the Kafka domain `oc set env dc/router ROUTER_DENIED_DOMAINS=kafka.ocp3.local`
