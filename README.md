@@ -5,15 +5,15 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#org9bb2853)
-2.  [Introduction](#org33fea6e)
-3.  [Getting started](#org46a4570)
-4.  [Examples](#org7b61b02)
-    1.  [Single instance Kafka](#org3f13d0a)
-    2.  [DR Kafka configuration](#org7f479c4)
-5.  [Route sharding](#orgd2d6ef5)
-    1.  [OpenShift 4.n](#org996a575)
-    2.  [OpenShift 3.11 (untested)](#orgd7f320c)
+1.  [Kafka disaster recovery with MirrorMaker 2](#org227197e)
+2.  [Introduction](#org2730aeb)
+3.  [Getting started](#org2a890dd)
+4.  [Examples](#org05e6ede)
+    1.  [Single instance Kafka](#org6df3d54)
+    2.  [DR Kafka configuration](#org095b4e6)
+5.  [Route sharding](#org327ab8c)
+    1.  [OpenShift 4.n](#orgfbe20d7)
+    2.  [OpenShift 3.11 (untested)](#orgd0babff)
 
 
 # Introduction
@@ -38,7 +38,7 @@ Strimzi 0.18.0.
 # Examples
 
 
-<a id="org3f13d0a"></a>
+<a id="org6df3d54"></a>
 
 ## Single instance Kafka
 
@@ -58,7 +58,7 @@ For testing the desaster recovery safe Kafka configuration we create a
 second namespace dr-kafka and mirror all topics from main-kafka with
 MirrorMaker 2 to this instance.
 
-We are using the same resouces as in [4.1](#org3f13d0a). Additionally we create
+We are using the same resouces as in [4.1](#org6df3d54). Additionally we create
 
 
 # Route sharding
@@ -121,7 +121,7 @@ We would propose the following steps:
 1.  Create a new router template with `oc adm router --dry-run -o yaml --service-account=router > kafka-router.yml`
 2.  Modify the generated yaml file
     -   change the router name
-    -   add the following environment variable `ROUTE_LABELS='strimzi.io/kind=Kafka'` OR
+    -   add the following environment variable `ROUTE_LABELS='strimzi.io/kind=Kafka'` **OR**
     -   use `ROUTER_ALLOWED_DOMAINS`, so that the kafka router only picks up routes for a certain domain
         e.g. `oc set env dc/router ROUTER_ALLOWED_DOMAINS=kafka.ocp3.local`, if more than one domain is used they should be separated by a comma.
 3.  Create the router with ~oc create -f kafka-router.yml and test if it picks up the kafka routes
