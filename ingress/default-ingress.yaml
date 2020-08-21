@@ -1,0 +1,6 @@
+spec:
+  routeSelector:
+    matchExpressions:
+      - key: strimzi.io/kind
+        operator: NotIn
+        value: Kafka
