@@ -5,15 +5,17 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#org227197e)
-2.  [Introduction](#org2730aeb)
-3.  [Getting started](#org2a890dd)
-4.  [Examples](#org05e6ede)
-    1.  [Single instance Kafka](#org6df3d54)
-    2.  [DR Kafka configuration](#org095b4e6)
-5.  [Route sharding](#org327ab8c)
-    1.  [OpenShift 4.n](#orgfbe20d7)
-    2.  [OpenShift 3.11 (untested)](#orgd0babff)
+1.  [Kafka disaster recovery with MirrorMaker 2](#org203d355)
+2.  [Introduction](#org86b2654)
+3.  [Getting started](#orgcab6492)
+4.  [Examples](#org7f02c81)
+    1.  [Single instance Kafka](#orgf32f791)
+        1.  [Test Case](#orga1eb808)
+    2.  [DR Kafka configuration](#org404255e)
+5.  [Route sharding](#org43be07c)
+    1.  [OpenShift 4.n](#orgf70b4f0)
+    2.  [OpenShift 3.11 (untested)](#orgd031d6e)
+6.  [Helpful kafka commands](#org50d3430)
 
 
 # Introduction
@@ -28,8 +30,8 @@ The example configuration is
 
 # Getting started
 
-For installating the strimzi operator follow the [quick-start
-installation](https://strimzi.io/docs/operators/master/quickstart.html#proc-install-product-str) documention.  We used the strimzi operator bundled with
+For installing the strimzi operator follow the [quick-start
+installation](https://strimzi.io/docs/operators/master/quickstart.html#proc-install-product-str) documentation.  We used the strimzi operator bundled with
 Red Hat's AMQ streams. But the examples below should also work with
 the upstream operator. AMQ Streams 1.5 comes with Kafka 2.5 and
 Strimzi 0.18.0.
@@ -38,7 +40,7 @@ Strimzi 0.18.0.
 # Examples
 
 
-<a id="org6df3d54"></a>
+<a id="orgf32f791"></a>
 
 ## Single instance Kafka
 
@@ -52,13 +54,57 @@ configuration for getting started with the strimzi operator. It creates the foll
 -   A test [consumer](examples/single-kafka/50-test-consumer.yml) that uses the main-kafka Kafka instance
 
 
+### Test Case
+
+We start a simple hello-world consumer and producer:
+
+    $ oc create -f examples/single-kafka/40-test-producer-main.yml
+    $ oc create -f examples/single-kafka/50-test-consumer-main.yml
+
+    $ oc exec main-kafka-kafka-0 -- /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group hello-world-consumer
+    OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+
+    GROUP                TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                          HOST            CLIENT-ID
+    hello-world-consumer test-topic      0          130             130             0               consumer-hello-world-consumer-1-2ee0a659-5ca9-44dc-9ef4-ad8c1ff28672 /10.116.0.76    consumer-hello-world-consumer-1
+    hello-world-consumer test-topic      1          124             124             0               consumer-hello-world-consumer-1-2ee0a659-5ca9-44dc-9ef4-ad8c1ff28672 /10.116.0.76    consumer-hello-world-consumer-1
+    hello-world-consumer test-topic      2          128             128             0               consumer-hello-world-consumer-1-2ee0a659-5ca9-44dc-9ef4-ad8c1ff28672 /10.116.0.76    consumer-hello-world-consumer-1
+
+after stopping the consumer
+
+    oc exec main-kafka-kafka-0 -- /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group hello-world-consumer
+    Defaulting container name to kafka.
+    Use 'oc describe pod/main-kafka-kafka-0 -n main-kafka' to see all of the containers in this pod.
+    OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+
+    GROUP                TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                          HOST            CLIENT-ID
+    hello-world-consumer test-topic      0          180             182             2               consumer-hello-world-consumer-1-50f8337e-439c-46d4-aeba-5bf3523261d0 /10.116.0.77    consumer-hello-world-consumer-1
+    hello-world-consumer test-topic      1          177             178             1               consumer-hello-world-consumer-1-50f8337e-439c-46d4-aeba-5bf3523261d0 /10.116.0.77    consumer-hello-world-consumer-1
+    hello-world-consumer test-topic      2          180             183             3               consumer-hello-world-consumer-1-50f8337e-439c-46d4-aeba-5bf3523261d0 /10.116.0.77    consumer-hello-world-consumer-1
+
+Because there is no consumer running but we are still producing
+messages, current offset is static, log end offset and lag are
+increasing.
+
+After starting the test consumer again, lag becomes 0 again and current-offset matches log-end-offset
+
+    $ oc exec main-kafka-kafka-0 -- /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group hello-world-consumer
+    Defaulting container name to kafka.
+    Use 'oc describe pod/main-kafka-kafka-0 -n main-kafka' to see all of the containers in this pod.
+    OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+
+    GROUP                TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                          HOST            CLIENT-ID
+    hello-world-consumer test-topic      0          275             275             0               consumer-hello-world-consumer-1-c6606c35-58f6-48ad-b64c-a3391a1309d1 /10.116.0.78    consumer-hello-world-consumer-1
+    hello-world-consumer test-topic      1          265             265             0               consumer-hello-world-consumer-1-c6606c35-58f6-48ad-b64c-a3391a1309d1 /10.116.0.78    consumer-hello-world-consumer-1
+    hello-world-consumer test-topic      2          286             286             0               consumer-hello-world-consumer-1-c6606c35-58f6-48ad-b64c-a3391a1309d1 /10.116.0.78    consumer-hello-world-consumer-1
+
+
 ## DR Kafka configuration
 
 For testing the desaster recovery safe Kafka configuration we create a
 second namespace dr-kafka and mirror all topics from main-kafka with
 MirrorMaker 2 to this instance.
 
-We are using the same resouces as in [4.1](#org6df3d54). Additionally we create
+We are using the same resources as in [4.1](#orgf32f791). Additionally we create
 
 
 # Route sharding
@@ -126,3 +172,12 @@ We would propose the following steps:
         e.g. `oc set env dc/router ROUTER_ALLOWED_DOMAINS=kafka.ocp3.local`, if more than one domain is used they should be separated by a comma.
 3.  Create the router with ~oc create -f kafka-router.yml and test if it picks up the kafka routes
 4.  Modify the default router so it does not expose routes for the Kafka domain `oc set env dc/router ROUTER_DENIED_DOMAINS=kafka.ocp3.local`
+
+
+# Helpful kafka commands
+
+    $ oc exec main-kafka-kafka-0 -- /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group offset-consumer
+
+    $ oc exec main-kafka-kafka-0 -- /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+
+    $ oc exec main-kafka-kafka-0 -- /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --topic test-topic --describe
