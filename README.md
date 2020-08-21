@@ -5,18 +5,18 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#org45da08a)
-2.  [Introduction](#orga6712a0)
-3.  [Getting started](#orge1b3667)
-4.  [Examples](#org8fa45b9)
-    1.  [Single instance Kafka](#org94aa479)
-        1.  [Test Case](#org94cbcf3)
-    2.  [DR Kafka configuration](#org74bcd2d)
-5.  [Route sharding](#org7555179)
-    1.  [Labeling kafka objects with custom labels](#orgb1d49cd)
-    2.  [OpenShift 4.n](#org49863bf)
-    3.  [OpenShift 3.11 (untested)](#orga066192)
-6.  [Helpful kafka commands](#org523790e)
+1.  [Kafka disaster recovery with MirrorMaker 2](#orgf5be6d3)
+2.  [Introduction](#org5c2268a)
+3.  [Getting started](#org855ae82)
+4.  [Examples](#org4fad717)
+    1.  [Single instance Kafka](#orged8f13b)
+        1.  [Test Case](#orgcba53ad)
+    2.  [DR Kafka configuration](#orgdab17f8)
+5.  [Route sharding](#org3b4a06f)
+    1.  [Labeling kafka objects with custom labels](#orgc40cdc7)
+    2.  [OpenShift 4.n](#org16eb067)
+    3.  [OpenShift 3.11 (untested)](#orga9ad30e)
+6.  [Helpful kafka commands](#org27b1843)
 
 
 # Introduction
@@ -41,7 +41,7 @@ Strimzi 0.18.0.
 # Examples
 
 
-<a id="org94aa479"></a>
+<a id="orged8f13b"></a>
 
 ## Single instance Kafka
 
@@ -105,7 +105,7 @@ For testing the desaster recovery safe Kafka configuration we create a
 second namespace dr-kafka and mirror all topics from main-kafka with
 MirrorMaker 2 to this instance.
 
-We are using the same resources as in [4.1](#org94aa479). Additionally we create
+We are using the same resources as in [4.1](#orged8f13b). Additionally we create
 
 
 # Route sharding
@@ -122,6 +122,10 @@ strimzi creates for kafka. Basically you have to add a `perPodRoute` and `extern
     spec:
       kafka:
         template:
+          pod:
+    	metadata:
+    	  labels:
+    	    type: kafka
           perPodRoute:
     	metadata:
     	  labels:
@@ -131,9 +135,10 @@ strimzi creates for kafka. Basically you have to add a `perPodRoute` and `extern
     	  labels:
     	    type: kafka
 
-This will add a `type: kafka` label to all Kafka and Kafka bootstrap route objects in k8s/ocp.
+This will add a `type: kafka` label to all Kafka and Kafka bootstrap
+route objects and the pod objects strimzi creates in k8s/ocp.
 
-Find a full example below:
+Find a full for labeling routes below example below:
 
     apiVersion: kafka.strimzi.io/v1beta1
     kind: Kafka

@@ -104,23 +104,28 @@ The are a little bit different between OpenShift 4 and 3.11.
 For selecting routes on different ingress controllers/routes it might be feasible to add custom label to the route objects
 strimzi creates for kafka. Basically you have to add a ~perPodRoute~ and ~externalBootstrapRoute~ template:
 
-#+begin_src sh
-spec:
-  kafka:
-    template:
-      perPodRoute:
-        metadata:
-          labels:
-            type: kafka
-      externalBootstrapRoute:
-        metadata:
-          labels:
-            type: kafka
+#+begin_src yaml
+  spec:
+    kafka:
+      template:
+	pod:
+	  metadata:
+	    labels:
+	      type: kafka
+	perPodRoute:
+	  metadata:
+	    labels:
+	      type: kafka
+	externalBootstrapRoute:
+	  metadata:
+	    labels:
+	      type: kafka
 #+end_src
 
-This will add a ~type: kafka~ label to all Kafka and Kafka bootstrap route objects in k8s/ocp.
+This will add a ~type: kafka~ label to all Kafka and Kafka bootstrap
+route objects and the pod objects strimzi creates in k8s/ocp.
 
-Find a full example below:
+Find a full for labeling routes below example below:
 
 #+begin_src
 apiVersion: kafka.strimzi.io/v1beta1
