@@ -5,17 +5,18 @@
 
 # Table of Contents
 
-1.  [Kafka disaster recovery with MirrorMaker 2](#org203d355)
-2.  [Introduction](#org86b2654)
-3.  [Getting started](#orgcab6492)
-4.  [Examples](#org7f02c81)
-    1.  [Single instance Kafka](#orgf32f791)
-        1.  [Test Case](#orga1eb808)
-    2.  [DR Kafka configuration](#org404255e)
-5.  [Route sharding](#org43be07c)
-    1.  [OpenShift 4.n](#orgf70b4f0)
-    2.  [OpenShift 3.11 (untested)](#orgd031d6e)
-6.  [Helpful kafka commands](#org50d3430)
+1.  [Kafka disaster recovery with MirrorMaker 2](#org45da08a)
+2.  [Introduction](#orga6712a0)
+3.  [Getting started](#orge1b3667)
+4.  [Examples](#org8fa45b9)
+    1.  [Single instance Kafka](#org94aa479)
+        1.  [Test Case](#org94cbcf3)
+    2.  [DR Kafka configuration](#org74bcd2d)
+5.  [Route sharding](#org7555179)
+    1.  [Labeling kafka objects with custom labels](#orgb1d49cd)
+    2.  [OpenShift 4.n](#org49863bf)
+    3.  [OpenShift 3.11 (untested)](#orga066192)
+6.  [Helpful kafka commands](#org523790e)
 
 
 # Introduction
@@ -40,7 +41,7 @@ Strimzi 0.18.0.
 # Examples
 
 
-<a id="orgf32f791"></a>
+<a id="org94aa479"></a>
 
 ## Single instance Kafka
 
@@ -104,13 +105,66 @@ For testing the desaster recovery safe Kafka configuration we create a
 second namespace dr-kafka and mirror all topics from main-kafka with
 MirrorMaker 2 to this instance.
 
-We are using the same resources as in [4.1](#orgf32f791). Additionally we create
+We are using the same resources as in [4.1](#org94aa479). Additionally we create
 
 
 # Route sharding
 
 We would like to expose routes created by strimzi to a separate ingress controller (aka router).
 The are a little bit different between OpenShift 4 and 3.11.
+
+
+## Labeling kafka objects with custom labels
+
+For selecting routes on different ingress controllers/routes it might be feasible to add custom label to the route objects
+strimzi creates for kafka. Basically you have to add a `perPodRoute` and `externalBootstrapRoute` template:
+
+    spec:
+      kafka:
+        template:
+          perPodRoute:
+    	metadata:
+    	  labels:
+    	    type: kafka
+          externalBootstrapRoute:
+    	metadata:
+    	  labels:
+    	    type: kafka
+
+This will add a `type: kafka` label to all Kafka and Kafka bootstrap route objects in k8s/ocp.
+
+Find a full example below:
+
+    apiVersion: kafka.strimzi.io/v1beta1
+    kind: Kafka
+    metadata:
+      name: main-kafka
+      namespace: main-kafka
+    spec:
+      kafka:
+        template:
+          perPodRoute:
+    	metadata:
+    	  labels:
+    	    type: kafka
+          externalBootstrapRoute:
+    	metadata:
+    	  labels:
+    	    type: kafka
+        replicas: 3
+        listeners:
+          plain: {}
+          tls: {}
+          external:
+    	type: route
+        storage:
+          type: ephemeral
+      zookeeper:
+        replicas: 3
+        storage:
+          type: ephemeral
+      entityOperator:
+        topicOperator: {}
 
 
 ## OpenShift 4.n
