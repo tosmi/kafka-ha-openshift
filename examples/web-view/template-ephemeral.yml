@@ -1,0 +1,178 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: kafka-webview
+  annotations:
+    description: "WebView for Kafka"
+    tags: "kaka-webview,webview, kafka"
+parameters:
+  - name: KAFKA_NAMESPACE
+    description: Name of the Kafka Namespace (Openshift Project)
+    value: stng
+  - name: KAFKA_CLUSTER_NAME
+    description: Name of the Kafka Cluster strimzi.io/name label
+    value: main-kafka
+objects:
+  - kind: ServiceAccount
+    apiVersion: v1
+    metadata:
+      name: kafka-webview
+      labels:
+        app: kafka-webview
+        strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+      # This is for oauth proxy
+      annotations:
+        serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"kafka-webview"}}'
+  - kind: Service
+    apiVersion: v1
+    metadata:
+      name: kafka-webview
+      labels:
+        app: kafka-webview
+        strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+      annotations:
+        service.alpha.openshift.io/serving-cert-secret-name: kafka-webview-service-certs
+    spec:
+      ports:
+      - name: 8443-tcp
+        port: 8443
+        targetPort: 8443
+        protocol: TCP
+      selector:
+        app: kafka-webview
+      type: ClusterIP
+  - kind: Route
+    apiVersion: v1
+    metadata:
+      labels:
+        app: kafka-webview
+        strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+      name: kafka-webview
+    spec:
+      port:
+        targetPort: 8443-tcp
+      tls:
+        termination: reencrypt
+      to:
+        kind: Service
+        name: kafka-webview
+        weight: 100
+      wildcardPolicy: None
+  - kind: ConfigMap
+    apiVersion: v1
+    metadata:
+      name: kafka-webview-config
+      labels:
+        app: kafka-webview
+        strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+    data:
+      config.yml: |
+        server:
+          ## What port to run the service on.
+          port: 8080
+          servlet:
+            session:
+              ## User login session timeout after 1 hour (3600 seconds)
+              timeout: 3600
+
+
+        ## Various App Configs
+        app:
+          ## Should be unique to your installation.
+          ## This key will be used for symmetric encryption of JKS/TrustStore secrets if you configure any SSL enabled Kafka clusters.
+          key: "SuperSecretKey"
+
+          ## Defines a prefix prepended to the Id of all consumers.
+          consumerIdPrefix: "KafkaWebViewConsumer"
+
+          ## Sets upper limit on the number of concurrent web socket consumers supported.
+          maxConcurrentWebSocketConsumers: 64
+
+          ## Require SSL
+          requireSsl: false
+
+          ## User authentication options
+          user:
+            ## Require user authentication
+            ## Setting to false will disable login requirement.
+            enabled: false
+
+            ## Optional: if you want to use LDAP for user authentication instead of locally defined users.
+            ldap:
+              ## Disabled by default.
+              enabled: false
+  - kind: Deployment
+    apiVersion: apps/v1
+    metadata:
+      name: kafka-webview
+      labels:
+        app: kafka-webview
+        strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: kafka-webview	
+          strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+      template:
+        metadata:
+          labels:
+            app: kafka-webview
+            strimzi.io/name: ${KAFKA_CLUSTER_NAME}
+        spec:
+          serviceAccount: kafka-webview
+          containers:
+            - name: kafka-webview
+              image: sourcelaborg/kafka-webview:2.6.0
+              imagePullPolicy: IfNotPresent
+              ports:
+                - name: kafka-webview
+                  containerPort: 8080
+                  protocol: TCP
+              volumeMounts:
+                - mountPath: /app/data
+                  name: kafka-webview-data
+                - mountPath: /app/config.yml
+                  name: kafka-webview-config
+                  subPath: config.yml
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 2Gi
+            - name: oauth-proxy
+              image: registry.redhat.io/openshift4/ose-oauth-proxy:v4.5
+              imagePullPolicy: IfNotPresent
+              ports:
+              - containerPort: 8443
+                name: web
+              args:
+                - --https-address=:8443
+                - --openshift-service-account=kafka-webview
+                - --upstream=http://localhost:8080
+                - --provider=openshift
+                - --openshift-sar={"namespace":"${KAFKA_NAMESPACE}","resource":"services","name":"kafka-webview","verb":"get"}
+                - --tls-cert=/etc/tls/private/tls.crt
+                - --tls-key=/etc/tls/private/tls.key
+                - --cookie-secret=SECRET
+              volumeMounts:
+                - mountPath: /etc/tls/private
+                  name: kafka-webview-service-certs
+              resources:
+                  requests:
+                    cpu: 10m
+                    memory: 2Mi
+                  limits:
+                    cpu: 50m
+                    memory: 100Mi
+          volumes:
+            - name: kafka-webview-data
+              emptyDir: {}
+            - name: kafka-webview-config
+              configMap:
+                name: kafka-webview-config
+            - name: kafka-webview-service-certs
+              secret:
+                secretName: kafka-webview-service-certs
