@@ -1,0 +1,47 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/instance: main-kafka
+    app.kubernetes.io/managed-by: strimzi-cluster-operator
+    app.kubernetes.io/name: kafka
+    app.kubernetes.io/part-of: strimzi-main-kafka
+    strimzi.io/cluster: main-kafka
+    strimzi.io/kind: Kafka
+    strimzi.io/name: strimzi
+    manager: okhttp
+  name: main-kafka-network-policy-kafka
+  namespace: main-kafka
+spec:
+  podSelector:
+    matchLabels:
+      strimzi.io/name: main-kafka-kafka
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector: {}
+    - podSelector:
+        matchLabels:
+          strimzi.io/kind: cluster-operator
+    - podSelector:
+        matchLabels:
+          strimzi.io/name: main-kafka-kafka
+    - podSelector:
+        matchLabels:
+          strimzi.io/name: main-kafka-entity-operator
+    - podSelector:
+        matchLabels:
+          strimzi.io/name: main-kafka-kafka-exporter
+    - podSelector:
+        matchLabels:
+          strimzi.io/name: main-kafka-cruise-control
+  - ports:
+    - port: 9091
+      protocol: TCP
+    - port: 9092
+      protocol: TCP
+    - port: 9093
+      protocol: TCP
+    - port: 9094
+      protocol: TCP
